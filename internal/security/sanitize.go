@@ -8,16 +8,13 @@ import (
 // Regular expressions for detecting potentially malicious patterns
 var (
 	// Matches common script injection patterns
-	scriptPattern = regexp.MustCompile(`(?i)<\s*script\b[^>]*>(.*?)<\s*/\s*script\s*>`)
+	scriptPattern = regexp.MustCompile(`(?i)<\s*script\b[^>]*>(.*?)<\s*/\s*script\s*>`) // Matches <script> tags
 
 	// Matches SQL injection attempts
-	sqlPattern = regexp.MustCompile(`(?i)(\b(select|insert|update|delete|drop|alter|create|truncate)\b.*\b(from|into|table|database|schema)\b)`)
-
-	// Matches URL patterns that might be used for phishing
-	urlPattern = regexp.MustCompile(`(?i)(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})`)
+	sqlPattern = regexp.MustCompile(`(?i)(\b(select|insert|update|delete|drop|alter|create|truncate)\b.*\b(from|into|table|database|schema)\b)`) // Matches SQL keywords
 
 	// Controls unicode homoglyph attacks where characters look similar but are different code points
-	homoglyphPattern = regexp.MustCompile(`\p{So}|\p{Cn}`)
+	homoglyphPattern = regexp.MustCompile(`\p{So}`) // Matches all Unicode symbols (category So)
 )
 
 // SanitizeInput cleans user input to prevent security issues
