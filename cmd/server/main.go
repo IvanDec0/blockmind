@@ -3,6 +3,7 @@ package main
 import (
 	"blockmind/internal/config"
 	"blockmind/internal/handlers"
+	"blockmind/internal/logger"
 	"log"
 	"os"
 	"os/signal"
@@ -10,7 +11,7 @@ import (
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/mdp/qrterminal/v3"
+	qrterminal "github.com/mdp/qrterminal/v3"
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/store/sqlstore"
 	"go.mau.fi/whatsmeow/types/events"
@@ -28,12 +29,11 @@ func main() {
 		log.Fatalf("Failed to load configuration: %v", err)
 	}
 
-	// Configure logging level based on debug setting
-	/* 	logLevel := "INFO"
-	   	if cfg.Debug {
-	   		logLevel = "DEBUG"
-	   		log.Println("Debug mode enabled")
-	   	} */
+	// Configure structured logging
+	logger.SetLevel(cfg.WhatsAppLogLevel)
+	logger.Info("Starting BlockMind WhatsApp bot",
+		logger.Field{Key: "debug_mode", Value: cfg.Debug},
+		logger.Field{Key: "model", Value: cfg.HuggingFaceModel})
 
 	// Setup database for WhatsApp
 	dbLog := waLog.Stdout("Database", cfg.WhatsAppLogLevel, cfg.Debug)
@@ -65,7 +65,7 @@ func main() {
 				Writer:     os.Stdout,
 				BlackChar:  qrterminal.BLACK,
 				WhiteChar:  qrterminal.WHITE,
-				QuietZone:  1,
+				QuietZone:  0,
 				HalfBlocks: false,
 				WithSixel:  false,
 			}

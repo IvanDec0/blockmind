@@ -45,7 +45,11 @@ func (m *Manager) Register(cmd Command) {
 // Execute executes a command
 func (m *Manager) Execute(ctx context.Context, input string) (string, error) {
 	// First sanitize the entire input
-	input = security.SanitizeInput(input)
+	var err_sanitizer string
+	input, err_sanitizer = security.SanitizeInput(input)
+	if err_sanitizer != "" {
+		return err_sanitizer, nil
+	}
 
 	// Split input into command and arguments
 	var command string

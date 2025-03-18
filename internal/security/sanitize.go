@@ -18,7 +18,7 @@ var (
 )
 
 // SanitizeInput cleans user input to prevent security issues
-func SanitizeInput(input string) string {
+func SanitizeInput(input string) (string, string) {
 	// Trim whitespace
 	sanitized := strings.TrimSpace(input)
 
@@ -27,11 +27,11 @@ func SanitizeInput(input string) string {
 
 	// Check for suspicious patterns and flag them
 	if scriptPattern.MatchString(sanitized) {
-		return "⚠️ Suspicious script detected in input"
+		return "nil", "⚠️ Suspicious script detected in input"
 	}
 
 	if sqlPattern.MatchString(sanitized) && len(sanitized) > 15 {
-		return "⚠️ Suspicious SQL syntax detected in input"
+		return "nil", "⚠️ Suspicious SQL syntax detected in input"
 	}
 
 	// Limit input length
@@ -39,7 +39,7 @@ func SanitizeInput(input string) string {
 		sanitized = sanitized[:1000] + "... (truncated)"
 	}
 
-	return sanitized
+	return sanitized, ""
 }
 
 // SanitizeCommand specifically sanitizes command inputs which might need different rules

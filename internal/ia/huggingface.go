@@ -2,7 +2,6 @@ package ia
 
 import (
 	"blockmind/internal/config"
-	"blockmind/internal/security"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -20,9 +19,6 @@ type Message struct {
 
 // AskQuestion sends a question to the Hugging Face API and returns the answer
 func AskQuestion(question string, cfg *config.Config) (string, error) {
-	// Sanitize the input question first
-	question = security.SanitizeInput(question)
-
 	// Create a context with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), cfg.AITimeout)
 	defer cancel()

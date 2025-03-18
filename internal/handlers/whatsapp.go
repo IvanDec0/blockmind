@@ -18,6 +18,7 @@ type WhatsAppHandler struct {
 	client         *whatsmeow.Client
 	commandManager *commands.Manager
 	config         *config.Config
+	handlerChain   middleware.HandlerFunc
 }
 
 // NewWhatsAppHandler creates a new WhatsApp handler
@@ -37,10 +38,17 @@ func NewWhatsAppHandler(client *whatsmeow.Client, cfg *config.Config) *WhatsAppH
 	helpCmd := commands.NewHelpCommand(manager)
 	manager.Register(helpCmd)
 
+	// Create the handler chain once
+	handler := manager.Execute
+	handler = middleware.StructuredLogger(handler)
+	handler = middleware.RateLimiter(cfg.RateLimit, cfg.RateLimitPeriod)(handler)
+	handler = middleware.Timeout(cfg.CommandTimeout)(handler)
+
 	return &WhatsAppHandler{
 		client:         client,
 		commandManager: manager,
 		config:         cfg,
+		handlerChain:   handler,
 	}
 }
 
@@ -58,14 +66,8 @@ func (h *WhatsAppHandler) HandleMessage(message *waE2E.Message, chatJID types.JI
 	ctx, cancel := context.WithTimeout(ctx, h.config.CommandTimeout)
 	defer cancel()
 
-	// Create processing pipeline with middleware
-	handler := h.commandManager.Execute
-	handler = middleware.Logger(handler)
-	handler = middleware.RateLimiter(h.config.RateLimit, h.config.RateLimitPeriod)(handler)
-	handler = middleware.Timeout(h.config.CommandTimeout)(handler)
-
-	// Process command with middleware
-	response, err := handler(ctx, text)
+	// Use the existing handler chain
+	response, err := h.handlerChain(ctx, text)
 	if err != nil {
 		response = "Sorry, I encountered an error while processing your request."
 		fmt.Printf("Error processing message: %v\n", err)

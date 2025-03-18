@@ -2,40 +2,23 @@ package middleware
 
 import (
 	"context"
-	"log"
+	"fmt"
 	"sync"
 	"time"
 )
 
+type userLimiter struct {
+	count     int
+	resetTime time.Time
+	mutex     sync.Mutex
+}
+
 // HandlerFunc represents a function that processes a command
 type HandlerFunc func(ctx context.Context, input string) (string, error)
 
-// Logger is middleware that logs command execution
-func Logger(next HandlerFunc) HandlerFunc {
-	return func(ctx context.Context, input string) (string, error) {
-		start := time.Now()
-		log.Printf("Processing: %s", input)
-
-		result, err := next(ctx, input)
-
-		duration := time.Since(start)
-		if err != nil {
-			log.Printf("Error: %s (%.2fms): %v", input, float64(duration.Microseconds())/1000, err)
-		} else {
-			log.Printf("Completed: %s (%.2fms)", input, float64(duration.Microseconds())/1000)
-		}
-
-		return result, err
-	}
-}
-
 // RateLimiter limits the rate of command execution per user
 func RateLimiter(limit int, period time.Duration) func(HandlerFunc) HandlerFunc {
-	type userLimiter struct {
-		count     int
-		resetTime time.Time
-		mutex     sync.Mutex
-	}
+	fmt.Println("RateLimiter")
 
 	limiters := make(map[string]*userLimiter)
 	var limitersMutex sync.Mutex
@@ -114,11 +97,4 @@ func Timeout(duration time.Duration) func(HandlerFunc) HandlerFunc {
 			}
 		}
 	}
-}
-
-// Helper function to get user ID from context
-func getUserIDFromContext(ctx context.Context) string {
-	// In a real implementation, you would extract the user ID from the context
-	// For now, we'll just return a placeholder
-	return "default-user"
 }
