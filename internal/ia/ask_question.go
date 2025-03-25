@@ -23,11 +23,6 @@ func AskQuestion(question string, cfg *config.Config) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), cfg.AITimeout)
 	defer cancel()
 
-	// Validate config (should already be validated, but just in case)
-	if cfg.HuggingFaceAPIKey == "" || cfg.HuggingFaceModel == "" {
-		return "", fmt.Errorf("missing required API key or model name in configuration")
-	}
-
 	// Improved prompt structure with clear separation of instructions
 	systemPrompt := `You are a precise question-answering system.
 Rules:
@@ -99,6 +94,7 @@ Rules:
 		if choice, ok := choices[0].(map[string]interface{}); ok {
 			if message, ok := choice["message"].(map[string]interface{}); ok {
 				if content, ok := message["content"].(string); ok {
+					content = content + "\n\n" + "*The AI can have errors, check the information.*"
 					return content, nil
 				}
 			}

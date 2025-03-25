@@ -14,9 +14,14 @@ type Config struct {
 	// AI Service
 	HuggingFaceAPIKey string
 	HuggingFaceModel  string
+	HuggingFaceAPIURL string
 	AITimeout         time.Duration
 	AIMaxTokens       int
 	AITemperature     float64
+
+	// Coingecko
+	CoingeckoAPIKey  string
+	CoingeckoBaseURL string
 
 	// WhatsApp
 	WhatsAppDBPath   string
@@ -38,20 +43,23 @@ func Load() (*Config, error) {
 
 	config := &Config{
 		// Default values
-		AITimeout:        20 * time.Second,
-		AIMaxTokens:      250,
-		AITemperature:    0.0,
-		WhatsAppDBPath:   "file:whatsapp.db?_foreign_keys=on",
-		WhatsAppLogLevel: "INFO",
-		RateLimit:        5,
-		RateLimitPeriod:  time.Minute,
-		CommandTimeout:   25 * time.Second,
-		Debug:            false,
+		AITimeout:         20 * time.Second,
+		AIMaxTokens:       250,
+		AITemperature:     0.0,
+		HuggingFaceAPIURL: "https://router.huggingface.co/hf-inference/models/",
+		CoingeckoBaseURL:  "https://api.coingecko.com/api/v3",
+		WhatsAppDBPath:    "file:whatsapp.db?_foreign_keys=on",
+		WhatsAppLogLevel:  "INFO",
+		RateLimit:         5,
+		RateLimitPeriod:   time.Minute,
+		CommandTimeout:    25 * time.Second,
+		Debug:             false,
 	}
 
 	// Required values
 	config.HuggingFaceAPIKey = os.Getenv("HUGGINGFACE_API_KEY")
 	config.HuggingFaceModel = os.Getenv("HUGGINGFACE_MODEL")
+	config.CoingeckoAPIKey = os.Getenv("COINGECKO_API_KEY")
 
 	// Optional values with overrides
 	if val := os.Getenv("AI_TIMEOUT"); val != "" {
@@ -98,6 +106,14 @@ func Load() (*Config, error) {
 		}
 	}
 
+	if val := os.Getenv("COINGECKO_API_URL"); val != "" {
+		config.CoingeckoBaseURL = val
+	}
+
+	if val := os.Getenv("HUGGINGFACE_BASE_URL"); val != "" {
+		config.HuggingFaceAPIURL = val
+	}
+
 	if val := os.Getenv("DEBUG"); val == "true" {
 		config.Debug = true
 	}
@@ -118,10 +134,14 @@ func (c *Config) validate() error {
 	if c.HuggingFaceModel == "" {
 		return fmt.Errorf("missing required environment variable: HUGGINGFACE_MODEL")
 	}
+
+	if c.CoingeckoAPIKey == "" {
+		return fmt.Errorf("missing required environment variable: COINGECKO_API_KEY")
+	}
 	return nil
 }
 
 // GetHuggingFaceAPIURL returns the constructed API URL for the HuggingFace model
 func (c *Config) GetHuggingFaceAPIURL() string {
-	return "https://router.huggingface.co/hf-inference/models/" + c.HuggingFaceModel + "/v1/chat/completions"
+	return c.HuggingFaceAPIURL + c.HuggingFaceModel + "/v1/chat/completions"
 }

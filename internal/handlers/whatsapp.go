@@ -32,7 +32,8 @@ func NewWhatsAppHandler(client *whatsmeow.Client, cfg *config.Config) *WhatsAppH
 	manager := commands.NewManager(defaultHandler)
 
 	// Register commands
-	manager.Register(commands.NewPriceCommand())
+	manager.Register(commands.NewPriceCommand(cfg))
+	manager.Register(commands.NewRecommendCommand(cfg))
 
 	// Help command needs a reference to the manager
 	helpCmd := commands.NewHelpCommand(manager)

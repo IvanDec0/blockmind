@@ -1,17 +1,22 @@
 package commands
 
 import (
+	"blockmind/internal/config"
+	"blockmind/internal/crypto"
 	"context"
-	"fmt"
 	"strings"
 )
 
 // PriceCommand handles price inquiries for cryptocurrencies
-type PriceCommand struct{}
+type PriceCommand struct {
+	cfg *config.Config
+}
 
 // NewPriceCommand creates a new price command
-func NewPriceCommand() *PriceCommand {
-	return &PriceCommand{}
+func NewPriceCommand(cfg *config.Config) *PriceCommand {
+	return &PriceCommand{
+		cfg: cfg,
+	}
 }
 
 // Name returns the name of the command
@@ -35,8 +40,20 @@ func (c *PriceCommand) Execute(ctx context.Context, args []string) (string, erro
 		return "Please specify a cryptocurrency (e.g., /price Bitcoin)", nil
 	}
 
-	// In a real implementation, you would call a crypto price API here
-	// For now, we'll just return a placeholder response
-	cryptoName := strings.Join(args, " ")
-	return fmt.Sprintf("The price of %s is $1,000", cryptoName), nil
+	var cryptoName, targetCurrency string
+
+	// Check if we have both crypto and currency
+	if len(args) >= 2 && (strings.ToLower(args[len(args)-2]) == "in" || strings.ToLower(args[len(args)-2]) == "to" || strings.ToLower(args[len(args)-2]) == "en") {
+		cryptoName = strings.Join(args[:len(args)-2], " ")
+		targetCurrency = args[len(args)-1]
+	} else {
+		cryptoName = strings.Join(args, " ")
+		targetCurrency = ""
+	}
+	price, err := crypto.GetCryptoPrice(cryptoName, targetCurrency, c.cfg)
+	if err != nil {
+		return "", err
+	}
+
+	return price, nil
 }
